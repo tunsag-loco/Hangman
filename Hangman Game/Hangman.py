@@ -1,146 +1,158 @@
-# Hangman game
 import random
+import string
 
+# Үгсийг агуулсан файл
 WORDLIST_FILENAME = "words.txt"
 
 def loadWords():
-    """
-    Returns a list of valid words. Words are strings of lowercase letters.
-    
-    Depending on the size of the word list, this function may
-    take a while to finish.
-    """
-    print("Loading word list from file...")
-    # inFile: file
+    print("Файлаас үгсийг ачааллаж байна...")
     inFile = open(WORDLIST_FILENAME, 'r')
-    # line: string
     line = inFile.readline()
-    # wordlist: list of strings
     wordlist = line.split()
-    print("  ", len(wordlist), "words loaded.")
+    print(len(wordlist), "үг ачааллаа.")
     return wordlist
 
 def chooseWord(wordlist):
-    """
-    wordlist (list): list of words (strings)
-
-    Returns a word from wordlist at random
-    """
     return random.choice(wordlist)
 
-# -----------------------------------
-wordlist = loadWords()
+# ASCII дүрслэл: Hangman-ийн зургууд
+HANGMAN_PICS = [
+    """
+     _______
+    |/      |
+    |
+    |
+    |
+    |
+    |
+    |___
+    """,
+    """
+     _______
+    |/      |
+    |      (_)
+    |
+    |
+    |
+    |
+    |___
+    """,
+    """
+     _______
+    |/      |
+    |      (_)
+    |       |
+    |       |
+    |
+    |
+    |___
+    """,
+    """
+     _______
+    |/      |
+    |      (_)
+    |      \|
+    |       |
+    |
+    |
+    |___
+    """,
+    """
+     _______
+    |/      |
+    |      (_)
+    |      \|/
+    |       |
+    |
+    |
+    |___
+    """,
+    """
+     _______
+    |/      |
+    |      (_)
+    |      \|/
+    |       |
+    |      /
+    |
+    |___
+    """,
+    """
+     _______
+    |/      |
+    |      (_)
+    |      \|/
+    |       |
+    |      / \\
+    |
+    |___
+    """
+]
 
 def isWordGuessed(secretWord, lettersGuessed):
-    '''
-    secretWord: string, the word the user is guessing
-    lettersGuessed: list, what letters have been guessed so far
-    returns: boolean, True if all the letters of secretWord are in lettersGuessed;
-      False otherwise
-    '''
-    c=0
-    for i in lettersGuessed:
-        if i in secretWord:
-            c+=1
-    if c==len(secretWord):
-        return True
-    else:
-        return False
-
+    for letter in secretWord:
+        if letter not in lettersGuessed:
+            return False
+    return True
 
 def getGuessedWord(secretWord, lettersGuessed):
-    '''
-    secretWord: string, the word the user is guessing
-    lettersGuessed: list, what letters have been guessed so far
-    returns: string, comprised of letters and underscores that represents
-      what letters in secretWord have been guessed so far.
-    '''
-    s=[]
-    for i in secretWord:
-        if i in lettersGuessed:
-            s.append(i)
-    ans=''
-    for i in secretWord:
-        if i in s:
-            ans+=i
+    guessed = ''
+    for letter in secretWord:
+        if letter in lettersGuessed:
+            guessed += letter
         else:
-            ans+='_ '
-    return ans
-
-
+            guessed += '_ '
+    return guessed
 
 def getAvailableLetters(lettersGuessed):
-    '''
-    lettersGuessed: list, what letters have been guessed so far
-    returns: string, comprised of letters that represents what letters have not
-      yet been guessed.
-    '''
-    import string
-    ans=list(string.ascii_lowercase)
-    for i in lettersGuessed:
-        ans.remove(i)
-    return ''.join(ans)
+    remaining = [l for l in string.ascii_lowercase if l not in lettersGuessed]
+    return ''.join(remaining)
 
 def hangman(secretWord):
-    '''
-    secretWord: string, the secret word to guess.
-
-    Starts up an interactive game of Hangman.
-
-    * At the start of the game, let the user know how many 
-      letters the secretWord contains.
-
-    * Ask the user to supply one guess (i.e. letter) per round.
-
-    * The user should receive feedback immediately after each guess 
-      about whether their guess appears in the computers word.
-
-    * After each round, you should also display to the user the 
-      partially guessed word so far, as well as letters that the 
-      user has not yet guessed.
-
-    Follows the other limitations detailed in the problem write-up.
-    '''
-    print("Welcome to the game, Hangman!")
-    print("I am thinking of a word that is",len(secretWord),"letters long.")
+    print("Та Hangman тоглоомд тавтай морил!")
+    print("Би", len(secretWord), "үсэгтэй үг бодлоо.")
     
-    global lettersGuessed
-    mistakeMade=0
-    lettersGuessed=[]
-    
-    while 8 - mistakeMade > 0:
-        
-        if isWordGuessed(secretWord, lettersGuessed):
-            print("-------------")
-            print("Congratulations, you won!")
-            break
-            
-        else:
-            print("-------------")
-            print("You have",8-mistakeMade,"guesses left.")
-            print("Available letters:",getAvailableLetters(lettersGuessed))
-            guess=str(input("Please guess a letter: ")).lower()
-            
-            if guess in lettersGuessed:
-                print("Oops! You've already guessed that letter:",getGuessedWord(secretWord,lettersGuessed))
-                
-            elif guess in secretWord and guess not in lettersGuessed:
-                lettersGuessed.append(guess)
-                print("Good guess:",getGuessedWord(secretWord,lettersGuessed))
-                
-            else:
-                lettersGuessed.append(guess)
-                mistakeMade += 1
-                print("Oops! That letter is not in my word:",getGuessedWord(secretWord,lettersGuessed))
-                
-        if 8 - mistakeMade == 0:
-            print("-------------")
-            print("Sorry, you ran out of guesses. The word was else.",secretWord)
-            break
-        
-        else:
+    mistakesMade = 0
+    lettersGuessed = []
+
+    while mistakesMade < len(HANGMAN_PICS) - 1:
+        print("-------------")
+        print("Үлдсэн оролдлого:", (len(HANGMAN_PICS) - 1) - mistakesMade)
+        print("Таасан үсгүүд:", ' '.join(lettersGuessed))
+        print("Таагаагүй үсгүүд:", getAvailableLetters(lettersGuessed))
+        print("Одоогийн байдал:", getGuessedWord(secretWord, lettersGuessed))
+        print(HANGMAN_PICS[mistakesMade])
+
+        guess = input("Нэг үсэг таана уу: ").lower()
+
+        if len(guess) != 1 or not guess.isalpha():
+            print("❗ Зөвхөн нэг үсэг оруулна уу.")
             continue
 
+        if guess in lettersGuessed:
+            print("❗ Энэ үсгийг аль хэдийн таасан байна:", guess)
+            continue
 
+        lettersGuessed.append(guess)
+
+        if guess in secretWord:
+            print("✅ Сайн байна! Та зөв таалаа:", getGuessedWord(secretWord, lettersGuessed))
+            if isWordGuessed(secretWord, lettersGuessed):
+                print("🎉 Баяр хүргэе! Та уг үгийг бүрэн таалаа:", secretWord)
+                break
+        else:
+            mistakesMade += 1
+            print("❌ Уучлаарай, энэ үсэг миний бодсон үгэнд байхгүй.")
+            print(HANGMAN_PICS[mistakesMade])
+    
+    if not isWordGuessed(secretWord, lettersGuessed):
+        print("-------------")
+        print("😢 Та бүх оролдлогоо дуусгалаа.")
+        print("Миний бодсон үг бол:", secretWord)
+        print("Сүүлчийн дүрслэл:")
+        print(HANGMAN_PICS[-1])
+
+# Тоглоомыг эхлүүлэх хэсэг
+wordlist = loadWords()
 secretWord = chooseWord(wordlist).lower()
 hangman(secretWord)
